@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlyCoral - Tu Buscador Experto de Vuelos en Argentina</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            coral: {
+              DEFAULT: '#ffbee9',
+              light: '#ffd6f1',
+              dark: '#e098c8',
+              accent: '#ff8fd8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Marked.js Markdown parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Highlight.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Tabla de vuelos con líneas divisorias definidas */
+    .prose-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.815rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+    .dark .prose-content table {
+      border-color: #334155;
+    }
+    .prose-content th {
+      background-color: #ffbee9;
+      color: #0f172a;
+      font-weight: 700;
+      padding: 0.65rem 0.75rem;
+      text-align: left;
+      border: 1px solid #cbd5e1;
+    }
+    .dark .prose-content th {
+      background-color: #3b1d31;
+      color: #ffbee9;
+      border-color: #475569;
+    }
+    .prose-content td {
+      padding: 0.65rem 0.75rem;
+      border: 1px solid #cbd5e1;
+      vertical-align: middle;
+    }
+    .dark .prose-content td {
+      border-color: #334155;
+    }
+    .prose-content tbody tr:nth-child(even) {
+      background-color: rgba(248, 250, 252, 0.85);
+    }
+    .dark .prose-content tbody tr:nth-child(even) {
+      background-color: rgba(30, 41, 59, 0.45);
+    }
+    .prose-content blockquote {
+      border-left: 4px solid #ffbee9;
+      padding: 0.6rem 1rem;
+      margin: 0.85rem 0;
+      background-color: rgba(255, 190, 233, 0.12);
+      border-radius: 0 0.5rem 0.5rem 0;
+      font-style: italic;
+    }
+    .prose-content a[href*="google.com/travel/flights"] {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      background-color: #ffbee9;
+      color: #0f172a !important;
+      font-weight: 600;
+      font-size: 0.75rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      transition: all 0.15s ease-in-out;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .prose-content a[href*="google.com/travel/flights"]:hover {
+      background-color: #ff8fd8;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+
+<body class="h-full bg-slate-50 dark:bg-[#0d1117] text-slate-900 dark:text-slate-100 flex flex-col overflow-hidden">
+  <div class="flex h-full w-full overflow-hidden">
+
+    <!-- Mobile Backdrop -->
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-30 hidden md:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="chatSidebar" class="fixed md:static inset-y-0 left-0 z-40 w-72 bg-white dark:bg-[#161b22] border-r border-slate-200 dark:border-slate-800 flex flex-col transition-transform duration-200 -translate-x-full md:translate-x-0 shrink-0 shadow-lg md:shadow-none">
+      <!-- Header -->
+      <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-[#ffbee9] flex items-center justify-center text-slate-900 shadow-sm font-black text-base">
+            <i class="ph-bold ph-airplane-tilt text-lg"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-base tracking-tight flex items-center gap-1.5 text-slate-900 dark:text-white">
+              FlyCoral
+              <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-[#ffbee9]/30 text-pink-700 dark:text-[#ffbee9] font-semibold border border-[#ffbee9]/60">AR</span>
+            </h1>
+            <p class="text-[11px] text-slate-400">Buscador experto de vuelos</p>
+          </div>
+        </div>
+        <button id="themeToggleBtn" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Cambiar tema">
+          <i class="ph ph-sun text-lg dark:hidden"></i>
+          <i class="ph ph-moon text-lg hidden dark:inline"></i>
+        </button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="p-3 space-y-2">
+        <button id="newChatBtn" class="w-full py-2 px-3 rounded-xl bg-[#ffbee9] hover:bg-[#ff8fd8] text-slate-900 font-semibold text-xs flex items-center justify-center space-x-2 transition shadow-xs">
+          <i class="ph-bold ph-plus text-sm"></i>
+          <span>Nueva Búsqueda</span>
+        </button>
+        <button id="openAlertsModalBtn" class="w-full py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium text-xs flex items-center justify-between transition">
+          <span class="flex items-center space-x-2">
+            <i class="ph-fill ph-bell-simple-ringing text-pink-500 text-sm"></i>
+            <span>Alertas de Vuelo</span>
+          </span>
+          <span id="alertCountBadge" class="hidden px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#ffbee9] text-slate-900">0</span>
+        </button>
+      </div>
+
+      <!-- Historial -->
+      <div class="px-3 py-1 flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+        <span>Historial de consultas</span>
+        <button id="clearAllHistoryBtn" class="text-slate-400 hover:text-red-500 transition text-[11px]" title="Limpiar historial">
+          <i class="ph ph-trash"></i>
+        </button>
+      </div>
+      <div id="historyList" class="flex-1 overflow-y-auto px-3 space-y-1 text-xs"></div>
+
+      <!-- Footer Info -->
+      <div class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 text-[11px] text-slate-500 space-y-1.5">
+        <div class="flex items-center justify-between">
+          <span class="flex items-center gap-1.5"><i class="ph-fill ph-clock text-pink-500"></i> Hora local:</span>
+          <span id="argLiveClock" class="font-mono font-bold text-slate-700 dark:text-slate-300">--:-- ART</span>
+        </div>
+        <div class="flex items-center justify-between pt-1">
+          <button id="openKeyModalBtn" class="text-xs text-pink-600 dark:text-[#ffbee9] hover:underline flex items-center gap-1">
+            <i class="ph ph-gear"></i> Configurar APIs
+          </button>
+          <span id="connectionStatusIndicator" class="text-[10px] text-amber-500 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> Modo Demo
+          </span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-[#0d1117] relative">
+      <!-- Top Bar -->
+      <header class="h-14 border-b border-slate-200 dark:border-slate-800 px-4 flex items-center justify-between shrink-0 bg-white/80 dark:bg-[#161b22]/80 backdrop-blur-xs z-20">
+        <div class="flex items-center space-x-3">
+          <button id="toggleSidebarMobile" class="md:hidden p-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg">
+            <i class="ph ph-list text-xl"></i>
+          </button>
+          <div class="flex items-center space-x-2">
+            <div class="w-2.5 h-2.5 rounded-full bg-pink-400 animate-pulse"></div>
+            <span class="font-semibold text-sm text-slate-800 dark:text-white">Coral</span>
+            <span class="text-xs text-slate-400 hidden sm:inline">• Tu Asistente Experta de Vuelos</span>
+          </div>
+        </div>
+
+        <button id="toggleSearchBoxBtn" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-pink-300 dark:border-pink-900/60 bg-pink-50 dark:bg-pink-950/30 text-pink-900 dark:text-pink-200 flex items-center space-x-1.5 hover:bg-pink-100 transition">
+          <i class="ph-bold ph-magnifying-glass text-xs"></i>
+          <span id="toggleSearchBoxLabel">Ocultar panel</span>
+          <i id="toggleSearchBoxIcon" class="ph-bold ph-caret-up text-xs text-pink-500"></i>
+        </button>
+      </header>
+
+      <!-- Panel de Búsqueda -->
+      <div id="searchBoxContent" class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-[#151b28] p-3 sm:p-4 text-xs transition-all shrink-0">
+        <div class="max-w-4xl mx-auto space-y-3">
+          <div class="flex items-center space-x-2 bg-slate-200/70 dark:bg-slate-800 p-1 rounded-xl w-fit">
+            <button class="trip-type-btn active px-3 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-[#151b28] text-slate-900 dark:text-white shadow-xs transition" data-trip="round_trip">Ida y Vuelta</button>
+            <button class="trip-type-btn px-3 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" data-trip="one_way">Solo Ida</button>
+            <button class="trip-type-btn px-3 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition" data-trip="multi_city">Multidestino 🔀</button>
+          </div>
+
+          <!-- Campos Ida y Vuelta / Solo Ida -->
+          <div id="standardTripFields" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] font-medium text-slate-500 mb-1">Origen</label>
+              <input type="text" id="searchOriginInput" list="argAirportsList" value="Buenos Aires (AEP/EZE)" class="w-full p-2 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-pink-400 outline-hidden">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] font-medium text-slate-500 mb-1">Destino</label>
+              <input type="text" id="searchDestinationInput" placeholder="Ej: Bariloche, Madrid, Miami..." class="w-full p-2 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-pink-400 outline-hidden">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] font-medium text-slate-500 mb-1">Salida</label>
+              <input type="date" id="searchDepartureDate" class="w-full p-2 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-pink-400 outline-hidden">
+            </div>
+            <div id="returnDateContainer" class="sm:col-span-2">
+              <label class="block text-[11px] font-medium text-slate-500 mb-1">Regreso</label>
+              <input type="date" id="searchReturnDate" class="w-full p-2 text-xs rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-pink-400 outline-hidden">
+            </div>
+            <div class="sm:col-span-2">
+              <button id="executeSearchBtn" class="w-full p-2 rounded-xl bg-[#ffbee9] hover:bg-[#ff8fd8] text-slate-900 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition">
+                <i class="ph-bold ph-magnifying-glass"></i> Buscar Vuelos
+              </button>
+            </div>
+          </div>
+
+          <!-- Campos Multidestino -->
+          <div id="multiCityFields" class="hidden space-y-2">
+            <div id="multiCityLegsContainer" class="space-y-2"></div>
+            <div class="flex items-center justify-between pt-1">
+              <button type="button" id="addLegBtn" class="text-xs font-semibold text-pink-600 dark:text-[#ffbee9] hover:underline flex items-center gap-1">
+                <i class="ph-bold ph-plus"></i> Agregar otro tramo
+              </button>
+              <button id="executeMultiSearchBtn" class="py-2 px-4 rounded-xl bg-[#ffbee9] hover:bg-[#ff8fd8] text-slate-900 font-bold text-xs flex items-center gap-1.5 shadow-xs transition">
+                <i class="ph-bold ph-paper-plane-tilt"></i> Analizar Multidestino
+              </button>
+            </div>
+          </div>
+
+          <!-- Filtros de Cabina y Moneda -->
+          <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200 dark:border-slate-800/60 text-slate-600 dark:text-slate-400">
+            <div class="flex items-center space-x-1.5">
+              <i class="ph ph-users text-sm"></i>
+              <select id="passengerSelect" class="bg-transparent border-0 text-xs font-medium text-slate-700 dark:text-slate-200 py-0 pl-1 pr-6 focus:ring-0 cursor-pointer">
+                <option value="1">1 Pasajero</option>
+                <option value="2">2 Pasajeros</option>
+                <option value="3">3 Pasajeros</option>
+                <option value="4">4 Pasajeros</option>
+              </select>
+            </div>
+            <span>•</span>
+            <div class="flex items-center space-x-1.5">
+              <i class="ph ph-armchair text-sm"></i>
+              <select id="cabinClassSelect" class="bg-transparent border-0 text-xs font-medium text-slate-700 dark:text-slate-200 py-0 pl-1 pr-6 focus:ring-0 cursor-pointer">
+                <option value="1">Económica</option>
+                <option value="2">Premium Economy</option>
+                <option value="3">Business</option>
+              </select>
+            </div>
+            <span>•</span>
+            <div class="flex items-center space-x-1.5">
+              <i class="ph ph-currency-dollar text-sm"></i>
+              <select id="currencySelect" class="bg-transparent border-0 text-xs font-medium text-slate-700 dark:text-slate-200 py-0 pl-1 pr-6 focus:ring-0 cursor-pointer">
+                <option value="USD">Dólares (USD)</option>
+                <option value="ARS">Pesos Argentinos (ARS)</option>
+                <option value="BOTH">Ambas Monedas</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <datalist id="argAirportsList">
+        <option value="Buenos Aires (AEP/EZE)">Buenos Aires (Aeroparque & Ezeiza)</option>
+        <option value="Aeroparque Jorge Newbery (AEP)">Buenos Aires (AEP)</option>
+        <option value="Ezeiza Ministro Pistarini (EZE)">Buenos Aires (EZE)</option>
+        <option value="Córdoba (COR)">Córdoba (COR)</option>
+        <option value="Mendoza (MDZ)">Mendoza (MDZ)</option>
+        <option value="Bariloche (BRC)">San Carlos de Bariloche (BRC)</option>
+        <option value="Rosario (ROS)">Rosario (ROS)</option>
+        <option value="Iguazú (IGR)">Puerto Iguazú (IGR)</option>
+        <option value="Salta (SLA)">Salta (SLA)</option>
+        <option value="Ushuaia (USH)">Ushuaia (USH)</option>
+      </datalist>
+
+      <!-- Mensajes -->
+      <div id="messagesWrapper" class="flex-1 overflow-y-auto p-4 space-y-4">
+        <div id="welcomeContainer" class="max-w-2xl mx-auto py-8 text-center space-y-5">
+          <div class="w-16 h-16 rounded-3xl bg-[#ffbee9] text-slate-900 mx-auto flex items-center justify-center text-3xl shadow-md border-2 border-pink-300">
+            <i class="ph-bold ph-airplane-takeoff"></i>
+          </div>
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+              ¡Hola! soy Coral y voy a ayudarte a buscar la mejor opción en vuelos
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-2 max-w-lg mx-auto">
+              Cuidemos tu presupuesto. Rastreemos tarifas convenientes, combinaciones de rutas y fechas para viajar sin despilfarrar.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left max-w-xl mx-auto pt-2">
+            <button class="starter-card p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:border-pink-300 dark:hover:border-pink-800/80 transition group shadow-xs" data-query="Hola Coral, buscame los mejores vuelos de Buenos Aires a Bariloche para este mes. Fijate qué aerolínea conviene y si hay buen precio.">
+              <div class="font-semibold text-xs text-slate-800 dark:text-white group-hover:text-pink-600 dark:group-hover:text-[#ffbee9] flex items-center gap-1.5">
+                <i class="ph-fill ph-mountains text-pink-500"></i> Buenos Aires ➔ Bariloche
+              </div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Vuelo directo, fechas próximas y equipaje.</div>
+            </button>
+
+            <button class="starter-card p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:border-pink-300 dark:hover:border-pink-800/80 transition group shadow-xs" data-query="Hola Coral, rastreame pasajes a Madrid saliendo de Ezeiza. Mostrame vuelos directos y con escala inteligente en USD y ARS.">
+              <div class="font-semibold text-xs text-slate-800 dark:text-white group-hover:text-pink-600 dark:group-hover:text-[#ffbee9] flex items-center gap-1.5">
+                <i class="ph-fill ph-globe-hemisphere-west text-pink-500"></i> Buenos Aires ➔ Madrid
+              </div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Comparativa directo vs. 1 escala económica.</div>
+            </button>
+
+            <button class="starter-card p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:border-pink-300 dark:hover:border-pink-800/80 transition group shadow-xs" data-query="Hola Coral, necesito viajar a Miami en los próximos meses. ¿Cómo vienen las tarifas de Avianca y Aerolíneas Argentinas?">
+              <div class="font-semibold text-xs text-slate-800 dark:text-white group-hover:text-pink-600 dark:group-hover:text-[#ffbee9] flex items-center gap-1.5">
+                <i class="ph-fill ph-sun-horizon text-pink-500"></i> Buenos Aires ➔ Miami
+              </div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Opciones en USD con escalas en Bogotá o directo.</div>
+            </button>
+
+            <button class="starter-card p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:border-pink-300 dark:hover:border-pink-800/80 transition group shadow-xs" data-query="Hola Coral, quiero hacer un viaje multidestino: Buenos Aires a Madrid, de Madrid a Roma, y regreso de Roma a Buenos Aires.">
+              <div class="font-semibold text-xs text-slate-800 dark:text-white group-hover:text-pink-600 dark:group-hover:text-[#ffbee9] flex items-center gap-1.5">
+                <i class="ph-fill ph-shuffle text-pink-500"></i> Ruta Multidestino Europa
+              </div>
+              <div class="text-[11px] text-slate-400 mt-0.5">Combinación de tramos en una sola consulta.</div>
+            </button>
+          </div>
+        </div>
+
+        <div id="messagesContainer" class="max-w-3xl mx-auto space-y-4"></div>
+
+        <div id="typingIndicator" class="hidden max-w-3xl mx-auto flex items-center space-x-2 text-xs text-slate-400">
+          <div class="w-6 h-6 rounded-full bg-[#ffbee9] text-slate-900 flex items-center justify-center font-bold">
+            <i class="ph-fill ph-airplane animate-spin text-xs"></i>
+          </div>
+          <div class="flex items-center space-x-1">
+            <span>Coral está analizando tarifas</span>
+            <span class="inline-block w-1 h-1 rounded-full bg-pink-400 animate-bounce"></span>
+            <span class="inline-block w-1 h-1 rounded-full bg-pink-400 animate-bounce [animation-delay:0.2s]"></span>
+            <span class="inline-block w-1 h-1 rounded-full bg-pink-400 animate-bounce [animation-delay:0.4s]"></span>
+          </div>
+        </div>
+
+        <div id="scrollAnchor"></div>
+      </div>
+
+      <!-- Chat Input Area -->
+      <footer class="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161b22] shrink-0">
+        <div class="max-w-3xl mx-auto">
+          <form id="chatForm" class="flex items-end space-x-2">
+            <div class="flex-1 bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-pink-400 transition flex items-end">
+              <textarea id="messageInput" rows="1" placeholder="Pedile a Coral tu ruta, destino o fecha (ej: Vuelos a Bariloche para el mes que viene)..." class="w-full bg-transparent resize-none border-0 text-xs sm:text-sm p-1.5 focus:ring-0 outline-hidden text-slate-900 dark:text-white max-h-32"></textarea>
+            </div>
+            <button type="submit" id="sendBtn" disabled class="w-10 h-10 rounded-2xl bg-[#ffbee9] hover:bg-[#ff8fd8] disabled:opacity-40 disabled:cursor-not-allowed text-slate-900 flex items-center justify-center transition shrink-0 shadow-xs">
+              <i class="ph-bold ph-paper-plane-right text-base"></i>
+            </button>
+          </form>
+          <div class="flex items-center justify-between mt-1.5 px-1 text-[11px] text-slate-400">
+            <span>Enter para enviar • Shift + Enter para salto</span>
+            <span class="hidden sm:inline">Vuelos con enlace canónico a Google Flights</span>
+          </div>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Modal Configurar APIs -->
+  <div id="keyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-xl text-xs">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+        <div class="flex items-center space-x-2 font-bold text-sm text-slate-900 dark:text-white">
+          <i class="ph-bold ph-key text-pink-500"></i>
+          <span>Configuración de Conexiones</span>
+        </div>
+        <button id="closeKeyModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+          <i class="ph ph-x text-base"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Gemini API Key (Google AI Studio)</label>
+          <div class="relative">
+            <input type="password" id="apiKeyInput" placeholder="AIzaSy..." class="w-full p-2.5 pr-8 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs">
+            <button type="button" id="toggleKeyVisibility" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
+              <i class="ph ph-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">SerpApi Key (Google Flights Live)</label>
+          <div class="relative">
+            <input type="password" id="serpApiKeyInput" placeholder="SerpApi Key..." class="w-full p-2.5 pr-8 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs">
+            <button type="button" id="toggleSerpKeyVisibility" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
+              <i class="ph ph-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="button" id="testApiKeysBtn" class="w-full py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs flex items-center justify-center gap-1.5 transition">
+          <i class="ph-bold ph-lightning text-pink-500"></i> Probar Conexión de Mis Claves en Vivo
+        </button>
+        <div id="testStatusConsole" class="hidden p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono text-[11px] space-y-1"></div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+        <button id="cancelKeyModalBtn" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">Cancelar</button>
+        <button id="saveKeyModalBtn" class="px-4 py-1.5 rounded-lg bg-[#ffbee9] hover:bg-[#ff8fd8] text-slate-900 font-bold shadow-xs">Guardar Claves</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Alertas de Vuelo -->
+  <div id="alertsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-xl text-xs max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+        <div class="flex items-center space-x-2 font-bold text-sm text-slate-900 dark:text-white">
+          <i class="ph-fill ph-bell-simple-ringing text-pink-500"></i>
+          <span>Alertas de Vuelos & Notificaciones</span>
+        </div>
+        <button id="closeAlertsModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+          <i class="ph ph-x text-base"></i>
+        </button>
+      </div>
+
+      <div class="overflow-y-auto space-y-4 pr-1 flex-1">
+        <form id="newAlertForm" class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 dark:text-white">Crear Nueva Alerta</span>
+            <div class="flex items-center space-x-1 bg-slate-200 dark:bg-slate-700 p-0.5 rounded-lg text-[10px]">
+              <button type="button" id="alertTypeSimpleBtn" class="px-2 py-0.5 rounded-md font-semibold bg-white dark:bg-[#151b28] text-slate-900 dark:text-white shadow-xs">Estándar</button>
+              <button type="button" id="alertTypeMultiBtn" class="px-2 py-0.5 rounded-md font-medium text-slate-500 dark:text-slate-400">Multidestino 🔀</button>
+            </div>
+          </div>
+
+          <div id="alertSimpleFields" class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] text-slate-400 mb-0.5">Origen</label>
+              <input type="text" id="alertOrigin" list="argAirportsList" value="Buenos Aires (AEP/EZE)" class="w-full p-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 mb-0.5">Destino</label>
+              <input type="text" id="alertDestination" placeholder="Ej: Bariloche, Madrid..." class="w-full p-1.5 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+            </div>
+          </div>
+
+          <div id="alertMultiFields" class="hidden space-y-1.5">
+            <div id="alertMultiLegsList" class="space-y-1.5"></div>
+            <button type="button" id="addAlertLegBtn" class="text-[11px] font-semibold text-pink-600 dark:text-[#ffbee9] hover:underline flex items-center gap-1">
+              <i class="ph ph-plus"></i> Añadir tramo
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-1">
+            <div class="sm:col-span-6">
+              <label class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Email para recibir alertas</label>
+              <input type="email" id="alertEmail" required value="diego.1202@yahoo.com" class="w-full p-2 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-1 focus:ring-pink-400 outline-hidden">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Frecuencia</label>
+              <select id="alertFrequency" class="w-full p-2 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer">
+                <option value="daily">Diaria</option>
+                <option value="weekly" selected>Semanal</option>
+                <option value="monthly">Mensual</option>
+              </select>
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5 flex items-center gap-1">
+                <i class="ph-fill ph-clock text-pink-500"></i> Hora del envío
+              </label>
+              <input type="time" id="alertDeliveryTime" value="09:00" class="w-full p-2 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono text-center">
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-700/60">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+              <div class="sm:col-span-7">
+                <label class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Precio objetivo (Opcional)</label>
+                <input type="text" id="alertTargetPrice" placeholder="Ej: USD 750 / ARS 900.000" class="w-full p-2 text-xs rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+              </div>
+              <div class="sm:col-span-5 flex items-center pt-2 sm:pt-4">
+                <label class="relative flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" id="alertImpossiblePriceToggle" class="sr-only peer" checked>
+                  <div class="w-8 h-4 bg-slate-300 peer-focus:outline-hidden rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-pink-500"></div>
+                  <span class="text-[11px] font-bold text-pink-600 dark:text-[#ffbee9] flex items-center gap-1">
+                    <i class="ph-fill ph-fire"></i> Alerta "Precios Imposibles"
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-1">
+            <button type="submit" class="w-full p-2.5 rounded-xl bg-[#ffbee9] hover:bg-[#ff8fd8] text-slate-900 font-bold text-xs shadow-xs transition flex items-center justify-center gap-1.5">
+              <i class="ph-bold ph-bell-simple-plus"></i> Guardar Alerta de Vuelo
+            </button>
+          </div>
+        </form>
+
+        <div>
+          <div class="font-bold text-slate-800 dark:text-white mb-2">Tus Alertas Guardadas</div>
+          <div id="alertsListContainer" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+        <div class="flex items-center gap-2">
+          <button id="simulateNotificationBtn" class="text-xs text-pink-600 dark:text-[#ffbee9] font-medium hover:underline flex items-center gap-1">
+            <i class="ph-bold ph-paper-plane-tilt"></i> Simular reporte programado
+          </button>
+          <span class="text-slate-300 dark:text-slate-700">|</span>
+          <button id="simulateImpossiblePriceBtn" class="text-xs text-pink-600 dark:text-[#ffbee9] font-bold hover:underline flex items-center gap-1">
+            <i class="ph-fill ph-fire text-pink-500"></i> Simular Precio Imposible 🔥
+          </button>
+        </div>
+        <button id="doneAlertsModalBtn" class="px-4 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 text-xs">
+          Listo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-12 opacity-0 pointer-events-none transition duration-200 flex items-center space-x-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2.5 rounded-xl shadow-lg text-xs font-medium">
+    <i id="toastIcon" class="ph-bold ph-check text-emerald-400 text-base"></i>
+    <span id="toastMessage">Notificación</span>
+  </div>
+
+  <script>
+    if (typeof marked !== 'undefined') {
+      marked.setOptions({
+        highlight: function(code, lang) {
+          if (typeof hljs !== 'undefined') {
+            if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
+            return hljs.highlightAuto(code).value;
+          }
+          return code;
+        },
+        breaks: true
+      });
+    }
+
+    function getCoralSystemPrompt(groundedFlightData = null) {
+      const now = new Date();
+      const localArgDate = now.toLocaleDateString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      const localArgTime = now.toLocaleTimeString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      let flightContextSnippet = "";
+      if (groundedFlightData) {
+        flightContextSnippet = `\nDATOS DE VUELOS DISPONIBLES:\n${JSON.stringify(groundedFlightData, null, 2)}\nPresentá con precisión estas opciones.\n`;
+      }
+
+      return `Sos Coral, la asistente experta de FlyCoral para vuelos desde Argentina.
+
+PERSONALIDAD Y TONO DE VOZ:
+- Hablás como una MADRE CANCHERA, MODERNA, PRÁCTICA Y ELEGANTE: sumamente sensata, comprensiva, formal y educada, con esa chispa de ironía inteligente y protectora sobre cuidar la plata y no hacer gastos absurdos.
+- PROHIBICIÓN ESTRICTA DE APELATIVOS MELOSOS: NUNCA digas "Hola, corazón", "corazón", "mi amor", "querido/a", "mi vida", "cielo" ni ningún diminutivo empalagoso. Cero melosidad.
+- El saludo debe ser educado, fresco y con onda (ej: "Hola, ¿cómo estás?", "Buen día", "Buenas tardes", "Hola, estuve mirando las opciones...").
+- Transmitís criterio práctico, buen gusto y experiencia de viajera ("cuidemos ese presupuesto", "viajá cómodo pero sin despilfarrar", "haceme caso que lo miré con lupa").
+
+LONGITUD DEL VEREDICTO (REGLA ESTRICTA):
+- Tu veredicto final DEBE SER ULTRA CONCISO: exactamente 1 o 2 oraciones directas, lúcidas y con un toque de ironía práctica o sentido común maternal sobre la conveniencia del precio. Nada de párrafos extensos ni rodeos.
+
+OPACIDAD TÉCNICA TOTAL (MANDATORIO):
+- NUNCA menciones términos técnicos como "price_insights", "SerpApi", "APIs", "scraping", "parámetros", "algoritmos" ni "percentiles".
+
+REGLA INTACTA ANTE TEMAS AJENOS O DESCONOCIDOS:
+Si te consultan sobre cualquier asunto ajeno a vuelos y viajes (recetas, política, deportes, programación, etc.) o sobre algo que desconocés, tu respuesta DEBE SER EXACTAMENTE Y SIN NINGÚN AGREGADO:
+"Diego colgó los guantes y no me programó para esto. Si le hablás, capaz lo convencés de que vuelva a trabajar y me actualice."
+
+FORMATO DE LA RESPUESTA DE VUELOS:
+1. Saludo breve, sobrio, educado y con onda (sin ningún apelativo cariñoso).
+2. Cuadro / tabla Markdown con líneas divisorias claras y estas columnas exactas:
+   | Opción | Fecha | Aerolínea & Escala | Horarios | Tarifa USD / ARS | Link Directo a Google Flights |
+   - En la columna "Fecha" indicá siempre la fecha exacta del viaje (ej: "15 Oct ➔ 23 Oct" para ida y vuelta, o "15 Oct" para solo ida).
+   - En la columna de link poné un botón Markdown con el texto [👉 Ver y Reservar este Vuelo](URL).
+3. Una única línea compacta sobre formas de pago o cuotas si aplican en pesos.
+4. Un bloque de cita (>) con tu VEREDICTO DE MADRE PRÁCTICA (máximo 1 o 2 oraciones directas, irónicas y al grano).
+
+Contexto local: Argentina, fecha actual ${localArgDate}, hora ${localArgTime} ART.
+${flightContextSnippet}`;
+    }
+
+    let conversations = [];
+    let activeChatId = null;
+    let apiKey = localStorage.getItem('gemini_custom_api_key') || "";
+    let serpApiKey = localStorage.getItem('flycoral_serpapi_key') || "";
+    let flightAlerts = JSON.parse(localStorage.getItem('flycoral_alerts') || '[]');
+
+    function updateConnectionBadge() {
+      const badge = document.getElementById('connectionStatusIndicator');
+      if (!badge) return;
+      if (serpApiKey) {
+        badge.className = "text-[10px] text-emerald-500 flex items-center gap-1";
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Google Flights en vivo';
+      } else {
+        badge.className = "text-[10px] text-amber-500 flex items-center gap-1";
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Modo Demo (Sin SerpApi)';
+      }
+    }
+
+    function buildGoogleFlightsUrl(originIata, destIata, depDate, retDate = null, currency = 'USD') {
+      const orig = (originIata || 'EZE').trim().toUpperCase();
+      const dest = (destIata || 'BRC').trim().toUpperCase();
+      const curr = currency === 'ARS' ? 'ARS' : 'USD';
+      
+      let queryText = `Flights to ${dest} from ${orig} on ${depDate}`;
+      if (retDate) queryText += ` through ${retDate}`;
+      return `https://www.google.com/travel/flights?q=${encodeURIComponent(queryText)}&curr=${curr}`;
+    }
+
+    function getPresetFlightData(destinationKey, preferredCurrency = 'USD') {
+      const today = new Date();
+      const dep = new Date(); dep.setDate(today.getDate() + 20);
+      const ret = new Date(); ret.setDate(today.getDate() + 28);
+      const depStr = dep.toISOString().split('T')[0];
+      const retStr = ret.toISOString().split('T')[0];
+      const fmtDate = (d) => d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+      const dateDisplay = `${fmtDate(dep)} ➔ ${fmtDate(ret)}`;
+
+      const presets = {
+        bariloche: {
+          route: "Buenos Aires (AEP/EZE) a Bariloche (BRC)",
+          destination_code: "BRC",
+          origin_code: "AEP",
+          depDate: depStr,
+          retDate: retStr,
+          flights: [
+            {
+              airline: "Flybondi",
+              type: "Vuelo Directo",
+              date_display: dateDisplay,
+              departure_time: "06:15 (AEP)",
+              arrival_time: "08:35 (BRC)",
+              price_usd: 75,
+              price_ars: 108000,
+              link: buildGoogleFlightsUrl('AEP', 'BRC', depStr, retStr, preferredCurrency),
+              mother_verdict: "Por USD 75 ida y vuelta es una oportunidad impecable; reservalo antes de que aumente y acordate de llevar buen abrigo."
+            },
+            {
+              airline: "Aerolíneas Argentinas",
+              type: "Vuelo Directo",
+              date_display: dateDisplay,
+              departure_time: "14:10 (AEP)",
+              arrival_time: "16:30 (BRC)",
+              price_usd: 95,
+              price_ars: 136000,
+              link: buildGoogleFlightsUrl('AEP', 'BRC', depStr, retStr, preferredCurrency),
+              mother_verdict: "La diferencia de plata es mínima para salir después de almorzar sin tener que madrugar a las cuatro de la mañana."
+            }
+          ]
+        },
+        madrid: {
+          route: "Buenos Aires (EZE) a Madrid (MAD)",
+          destination_code: "MAD",
+          origin_code: "EZE",
+          depDate: depStr,
+          retDate: retStr,
+          flights: [
+            {
+              airline: "Air Europa + ITA",
+              type: "1 Escala rápida",
+              date_display: dateDisplay,
+              departure_time: "13:20 (EZE)",
+              arrival_time: "09:15 (MAD)",
+              price_usd: 740,
+              price_ars: 1060000,
+              link: buildGoogleFlightsUrl('EZE', 'MAD', depStr, retStr, preferredCurrency),
+              mother_verdict: "USD 740 para cruzar el charco es una tarifa excelente; con esa escala corta te ahorrás unos cuantos dólares para gastar en destino."
+            },
+            {
+              airline: "Iberia / Level",
+              type: "Vuelo Directo",
+              date_display: dateDisplay,
+              departure_time: "22:45 (EZE)",
+              arrival_time: "14:35 (MAD)",
+              price_usd: 880,
+              price_ars: 1260000,
+              link: buildGoogleFlightsUrl('EZE', 'MAD', depStr, retStr, preferredCurrency),
+              mother_verdict: "El directo nocturno vale cada centavo si querés dormir todo el viaje y llegar entero a Barajas sin perder un día."
+            }
+          ]
+        },
+        miami: {
+          route: "Buenos Aires (EZE) a Miami (MIA)",
+          destination_code: "MIA",
+          origin_code: "EZE",
+          depDate: depStr,
+          retDate: retStr,
+          flights: [
+            {
+              airline: "Avianca",
+              type: "1 Escala en BOG",
+              date_display: dateDisplay,
+              departure_time: "07:10 (EZE)",
+              arrival_time: "18:45 (MIA)",
+              price_usd: 670,
+              price_ars: 960000,
+              link: buildGoogleFlightsUrl('EZE', 'MIA', depStr, retStr, preferredCurrency),
+              mother_verdict: "USD 670 con escala prudente en Bogotá es una compra muy inteligente para tu bolsillo; aprovechala antes de que vuele."
+            },
+            {
+              airline: "Aerolíneas Argentinas",
+              type: "Vuelo Directo",
+              date_display: dateDisplay,
+              departure_time: "23:15 (EZE)",
+              arrival_time: "07:00 (MIA)",
+              price_usd: 920,
+              price_ars: 1320000,
+              link: buildGoogleFlightsUrl('EZE', 'MIA', depStr, retStr, preferredCurrency),
+              mother_verdict: "Viajás de noche directo y sin transbordos; pagás un extra, pero te ahorrás el desgaste del viaje."
+            }
+          ]
+        }
+      };
+
+      return presets[destinationKey] || presets.bariloche;
+    }
+
+    function detectRouteDestination(text) {
+      const lower = text.toLowerCase();
+      if (lower.includes('bariloche') || lower.includes('brc')) return 'bariloche';
+      if (lower.includes('madrid') || lower.includes('españa') || lower.includes('mad')) return 'madrid';
+      if (lower.includes('miami') || lower.includes('florida') || lower.includes('mia')) return 'miami';
+      return null;
+    }
+
+    // DOM Elements
+    const messagesWrapper = document.getElementById('messagesWrapper');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const welcomeContainer = document.getElementById('welcomeContainer');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const messageInput = document.getElementById('messageInput');
+    const chatForm = document.getElementById('chatForm');
+    const sendBtn = document.getElementById('sendBtn');
+    const historyList = document.getElementById('historyList');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const clearAllHistoryBtn = document.getElementById('clearAllHistoryBtn');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const scrollAnchor = document.getElementById('scrollAnchor');
+    const argLiveClock = document.getElementById('argLiveClock');
+
+    // Panel Búsqueda
+    const toggleSearchBoxBtn = document.getElementById('toggleSearchBoxBtn');
+    const searchBoxContent = document.getElementById('searchBoxContent');
+    const toggleSearchBoxLabel = document.getElementById('toggleSearchBoxLabel');
+    const toggleSearchBoxIcon = document.getElementById('toggleSearchBoxIcon');
+    const tripTypeBtns = document.querySelectorAll('.trip-type-btn');
+    const standardTripFields = document.getElementById('standardTripFields');
+    const multiCityFields = document.getElementById('multiCityFields');
+    const returnDateContainer = document.getElementById('returnDateContainer');
+    const searchOriginInput = document.getElementById('searchOriginInput');
+    const searchDestinationInput = document.getElementById('searchDestinationInput');
+    const searchDepartureDate = document.getElementById('searchDepartureDate');
+    const searchReturnDate = document.getElementById('searchReturnDate');
+    const passengerSelect = document.getElementById('passengerSelect');
+    const cabinClassSelect = document.getElementById('cabinClassSelect');
+    const currencySelect = document.getElementById('currencySelect');
+    const executeSearchBtn = document.getElementById('executeSearchBtn');
+    const multiCityLegsContainer = document.getElementById('multiCityLegsContainer');
+    const addLegBtn = document.getElementById('addLegBtn');
+    const executeMultiSearchBtn = document.getElementById('executeMultiSearchBtn');
+
+    let currentTripType = 'round_trip';
+
+    // Sidebar Mobile
+    const chatSidebar = document.getElementById('chatSidebar');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+    const toggleSidebarMobile = document.getElementById('toggleSidebarMobile');
+
+    // Modals
+    const keyModal = document.getElementById('keyModal');
+    const openKeyModalBtn = document.getElementById('openKeyModalBtn');
+    const closeKeyModalBtn = document.getElementById('closeKeyModalBtn');
+    const cancelKeyModalBtn = document.getElementById('cancelKeyModalBtn');
+    const saveKeyModalBtn = document.getElementById('saveKeyModalBtn');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const serpApiKeyInput = document.getElementById('serpApiKeyInput');
+    const toggleKeyVisibility = document.getElementById('toggleKeyVisibility');
+    const toggleSerpKeyVisibility = document.getElementById('toggleSerpKeyVisibility');
+
+    const alertsModal = document.getElementById('alertsModal');
+    const openAlertsModalBtn = document.getElementById('openAlertsModalBtn');
+    const closeAlertsModalBtn = document.getElementById('closeAlertsModalBtn');
+    const doneAlertsModalBtn = document.getElementById('doneAlertsModalBtn');
+    const newAlertForm = document.getElementById('newAlertForm');
+    const alertsListContainer = document.getElementById('alertsListContainer');
+    const alertCountBadge = document.getElementById('alertCountBadge');
+    const simulateNotificationBtn = document.getElementById('simulateNotificationBtn');
+    const simulateImpossiblePriceBtn = document.getElementById('simulateImpossiblePriceBtn');
+    const alertTypeSimpleBtn = document.getElementById('alertTypeSimpleBtn');
+    const alertTypeMultiBtn = document.getElementById('alertTypeMultiBtn');
+    const alertSimpleFields = document.getElementById('alertSimpleFields');
+    const alertMultiFields = document.getElementById('alertMultiFields');
+    const alertMultiLegsList = document.getElementById('alertMultiLegsList');
+    const addAlertLegBtn = document.getElementById('addAlertLegBtn');
+    const alertImpossiblePriceToggle = document.getElementById('alertImpossiblePriceToggle');
+
+    let currentAlertModalType = 'simple';
+    let alertMultiLegs = [
+      { origin: "Buenos Aires (EZE)", destination: "Bariloche (BRC)" },
+      { origin: "Bariloche (BRC)", destination: "Mendoza (MDZ)" }
+    ];
+
+    let multiLegs = [
+      { origin: "Buenos Aires (EZE)", destination: "Madrid (MAD)", date: "" },
+      { origin: "Madrid (MAD)", destination: "Roma (FCO)", date: "" },
+      { origin: "Roma (FCO)", destination: "Buenos Aires (EZE)", date: "" }
+    ];
+
+    function updateClock() {
+      const now = new Date();
+      argLiveClock.textContent = `${now.toLocaleTimeString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        hour: '2-digit',
+        minute: '2-digit'
+      })} ART`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function initSearchBoxDates() {
+      const today = new Date();
+      const dep = new Date(); dep.setDate(today.getDate() + 20);
+      const ret = new Date(); ret.setDate(today.getDate() + 28);
+      const fmt = (d) => d.toISOString().split('T')[0];
+
+      searchDepartureDate.value = fmt(dep);
+      searchDepartureDate.min = fmt(today);
+      searchReturnDate.value = fmt(ret);
+      searchReturnDate.min = fmt(dep);
+
+      multiLegs[0].date = fmt(dep);
+      const leg2 = new Date(dep); leg2.setDate(leg2.getDate() + 7);
+      const leg3 = new Date(leg2); leg3.setDate(leg3.getDate() + 8);
+      multiLegs[1].date = fmt(leg2);
+      multiLegs[2].date = fmt(leg3);
+
+      renderMultiCityUI();
+    }
+
+    let isSearchBoxExpanded = true;
+    toggleSearchBoxBtn.addEventListener('click', () => {
+      isSearchBoxExpanded = !isSearchBoxExpanded;
+      if (isSearchBoxExpanded) {
+        searchBoxContent.classList.remove('hidden');
+        toggleSearchBoxLabel.textContent = 'Ocultar panel';
+        toggleSearchBoxIcon.className = 'ph-bold ph-caret-up text-xs text-pink-500';
+      } else {
+        searchBoxContent.classList.add('hidden');
+        toggleSearchBoxLabel.textContent = 'Mostrar panel';
+        toggleSearchBoxIcon.className = 'ph-bold ph-caret-down text-xs text-pink-500';
+      }
+    });
+
+    tripTypeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tripTypeBtns.forEach(b => {
+          b.classList.remove('active', 'bg-white', 'dark:bg-[#151b28]', 'text-slate-900', 'dark:text-white', 'shadow-xs');
+          b.classList.add('text-slate-600', 'dark:text-slate-400');
+        });
+        btn.classList.add('active', 'bg-white', 'dark:bg-[#151b28]', 'text-slate-900', 'dark:text-white', 'shadow-xs');
+        btn.classList.remove('text-slate-600', 'dark:text-slate-400');
+
+        currentTripType = btn.dataset.trip;
+
+        if (currentTripType === 'round_trip') {
+          standardTripFields.classList.remove('hidden');
+          multiCityFields.classList.add('hidden');
+          returnDateContainer.classList.remove('hidden');
+        } else if (currentTripType === 'one_way') {
+          standardTripFields.classList.remove('hidden');
+          multiCityFields.classList.add('hidden');
+          returnDateContainer.classList.add('hidden');
+        } else if (currentTripType === 'multi_city') {
+          standardTripFields.classList.add('hidden');
+          multiCityFields.classList.remove('hidden');
+        }
+      });
+    });
+
+    function renderMultiCityUI() {
+      multiCityLegsContainer.innerHTML = '';
+      multiLegs.forEach((leg, index) => {
+        const legDiv = document.createElement('div');
+        legDiv.className = 'grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 text-xs';
+        legDiv.innerHTML = `
+          <div class="sm:col-span-2 font-bold text-pink-600 dark:text-[#ffbee9]">Tramo ${index + 1}</div>
+          <div class="sm:col-span-4">
+            <input type="text" placeholder="Origen" list="argAirportsList" value="${escapeHtml(leg.origin)}" class="multi-orig-input w-full p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs" data-index="${index}">
+          </div>
+          <div class="sm:col-span-3">
+            <input type="text" placeholder="Destino" value="${escapeHtml(leg.destination)}" class="multi-dest-input w-full p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs" data-index="${index}">
+          </div>
+          <div class="sm:col-span-2">
+            <input type="date" value="${leg.date}" class="multi-date-input w-full p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs" data-index="${index}">
+          </div>
+          <div class="sm:col-span-1 text-center">
+            ${multiLegs.length > 2 ? `
+              <button type="button" class="remove-leg-btn text-slate-400 hover:text-red-500" data-index="${index}">
+                <i class="ph ph-trash text-sm"></i>
+              </button>
+            ` : '<span class="text-slate-300 dark:text-slate-600">—</span>'}
+          </div>
+        `;
+        multiCityLegsContainer.appendChild(legDiv);
+      });
+
+      multiCityLegsContainer.querySelectorAll('.multi-orig-input').forEach(i => i.addEventListener('input', e => multiLegs[e.target.dataset.index].origin = e.target.value));
+      multiCityLegsContainer.querySelectorAll('.multi-dest-input').forEach(i => i.addEventListener('input', e => multiLegs[e.target.dataset.index].destination = e.target.value));
+      multiCityLegsContainer.querySelectorAll('.multi-date-input').forEach(i => i.addEventListener('input', e => multiLegs[e.target.dataset.index].date = e.target.value));
+      multiCityLegsContainer.querySelectorAll('.remove-leg-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          multiLegs.splice(parseInt(e.currentTarget.dataset.index, 10), 1);
+          renderMultiCityUI();
+        });
+      });
+    }
+
+    addLegBtn.addEventListener('click', () => {
+      const last = multiLegs[multiLegs.length - 1];
+      const nextDate = new Date(last.date || Date.now());
+      nextDate.setDate(nextDate.getDate() + 7);
+      multiLegs.push({
+        origin: last.destination || "Buenos Aires (EZE)",
+        destination: "Nuevo Destino",
+        date: nextDate.toISOString().split('T')[0]
+      });
+      renderMultiCityUI();
+    });
+
+    executeSearchBtn.addEventListener('click', () => {
+      const orig = searchOriginInput.value.trim() || 'Buenos Aires (EZE/AEP)';
+      const dest = searchDestinationInput.value.trim();
+      const dep = searchDepartureDate.value;
+      const ret = searchReturnDate.value;
+      const pass = passengerSelect.options[passengerSelect.selectedIndex].text;
+      const cab = cabinClassSelect.options[cabinClassSelect.selectedIndex].text;
+      const curr = currencySelect ? currencySelect.value : 'USD';
+
+      if (!dest) {
+        showToast("Por favor, ingresá un destino", true);
+        return;
+      }
+
+      let query = `Vuelo de ${orig} a ${dest}`;
+      if (currentTripType === 'round_trip') {
+        query += `, salida ${dep || 'próxima'} y regreso ${ret || 'próxima'}`;
+      } else {
+        query += `, solo ida con salida ${dep || 'próxima'}`;
+      }
+      query += `. Pasajeros: ${pass}, Cabina: ${cab}, Moneda preferida: ${curr}.`;
+
+      handleSendMessage(query);
+    });
+
+    executeMultiSearchBtn.addEventListener('click', () => {
+      const validLegs = multiLegs.filter(l => l.origin && l.destination);
+      if (validLegs.length < 2) {
+        showToast("Por favor ingresá al menos dos tramos", true);
+        return;
+      }
+      const pass = passengerSelect.options[passengerSelect.selectedIndex].text;
+      const cab = cabinClassSelect.options[cabinClassSelect.selectedIndex].text;
+      const curr = currencySelect ? currencySelect.value : 'USD';
+
+      let query = `Buscame esta ruta multidestino con vuelos y tarifas:\n`;
+      validLegs.forEach((l, idx) => {
+        query += `- Tramo ${idx + 1}: ${l.origin} a ${l.destination} (${l.date || 'fecha flexible'})\n`;
+      });
+      query += `Pasajeros: ${pass}, Cabina: ${cab}, Moneda: ${curr}.`;
+
+      handleSendMessage(query);
+    });
+
+    async function queryGoogleFlightsSerpApi(destinationKeyword, preferredCurrency = 'USD', customDepDate = null, customRetDate = null) {
+      const targetMap = {
+        bariloche: { iata: 'BRC', name: 'Bariloche' },
+        madrid: { iata: 'MAD', name: 'Madrid' },
+        miami: { iata: 'MIA', name: 'Miami' }
+      };
+      const destInfo = targetMap[destinationKeyword] || { iata: 'BRC', name: 'Bariloche' };
+
+      const today = new Date();
+      const depDate = customDepDate ? new Date(customDepDate) : new Date(today.getTime() + (20 * 86400000));
+      const retDate = customRetDate ? new Date(customRetDate) : new Date(today.getTime() + (28 * 86400000));
+      const depStr = depDate.toISOString().split('T')[0];
+      const retStr = retDate.toISOString().split('T')[0];
+
+      if (!serpApiKey) return null;
+
+      const apiCurrency = preferredCurrency === 'ARS' ? 'ARS' : 'USD';
+      const directSerpUrl = `https://serpapi.com/search.json?engine=google_flights&departure_id=EZE&arrival_id=${destInfo.iata}&outbound_date=${depStr}&return_date=${retStr}&currency=${apiCurrency}&hl=es&gl=ar&api_key=${serpApiKey}`;
+
+      const fetchEndpoints = [
+        directSerpUrl,
+        `https://corsproxy.io/?${encodeURIComponent(directSerpUrl)}`
+      ];
+
+      for (const endpoint of fetchEndpoints) {
+        try {
+          const res = await fetch(endpoint, { headers: { 'Accept': 'application/json' } });
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (data.error) continue;
+
+          const candidates = (data.best_flights || data.other_flights || []);
+          if (candidates.length === 0) continue;
+
+          const flightsList = candidates.slice(0, 3).map(f => {
+            const leg = f.flights?.[0] || {};
+            const depTime = leg.departure_airport?.time ? leg.departure_airport.time.split(' ')[1] || leg.departure_airport.time : "08:00";
+            const arrTime = leg.arrival_airport?.time ? leg.arrival_airport.time.split(' ')[1] || leg.arrival_airport.time : "18:00";
+            const depCode = leg.departure_airport?.id || "EZE";
+            const arrCode = leg.arrival_airport?.id || destInfo.iata;
+            const airlineName = leg.airline || "Aerolínea comercial";
+            const priceValue = f.price || 0;
+
+            return {
+              airline: airlineName,
+              type: (f.layovers && f.layovers.length > 0) ? `${f.layovers.length} Escala(s)` : "Vuelo Directo",
+              date_display: `${depStr} ➔ ${retStr}`,
+              departure_time: `${depTime} (${depCode})`,
+              arrival_time: `${arrTime} (${arrCode})`,
+              price_usd: apiCurrency === 'USD' ? priceValue : Math.round(priceValue / 1420),
+              price_ars: apiCurrency === 'ARS' ? priceValue : Math.round(priceValue * 1420),
+              link: buildGoogleFlightsUrl(depCode, arrCode, depStr, retStr, preferredCurrency),
+              mother_verdict: "Es una oportunidad muy conveniente obtenida al momento; si te cierran los horarios, definilo hoy antes de que cambie la disponibilidad."
+            };
+          });
+
+          return {
+            route: `Buenos Aires a ${destInfo.name} (${destInfo.iata})`,
+            destination_code: destInfo.iata,
+            origin_code: "EZE",
+            depDate: depStr,
+            retDate: retStr,
+            flights: flightsList
+          };
+        } catch (e) {
+          // continuar al siguiente endpoint
+        }
+      }
+
+      return null;
+    }
+
+    async function handleSendMessage(customPrompt = null) {
+      const text = (customPrompt || messageInput.value).trim();
+      if (!text) return;
+
+      const active = getActiveConversation();
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      appendMessageUI('user', text, timeStr);
+      active.messages.push({ role: 'user', text, time: timeStr });
+
+      if (active.messages.length === 1) {
+        active.title = text.slice(0, 30) + (text.length > 30 ? '...' : '');
+        renderHistoryList();
+      }
+      persistConversations();
+
+      messageInput.value = '';
+      adjustTextareaHeight();
+      updateSendBtnState();
+
+      typingIndicator.classList.remove('hidden');
+      scrollToBottom();
+
+      try {
+        const detectedDest = detectRouteDestination(text);
+        let groundedData = null;
+        let preferredCurr = currencySelect ? currencySelect.value : 'USD';
+        if (/pesos|ars|\$ars/i.test(text)) preferredCurr = 'ARS';
+        else if (/dolares|dólares|usd/i.test(text)) preferredCurr = 'USD';
+
+        if (detectedDest) {
+          const depDateVal = searchDepartureDate ? searchDepartureDate.value : null;
+          const retDateVal = searchReturnDate ? searchReturnDate.value : null;
+          groundedData = await queryGoogleFlightsSerpApi(detectedDest, preferredCurr, depDateVal, retDateVal);
+        }
+
+        const botReply = await callGeminiAPI(active, groundedData, text, detectedDest, preferredCurr);
+        typingIndicator.classList.add('hidden');
+
+        const replyTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        appendMessageUI('model', botReply, replyTime);
+        active.messages.push({ role: 'model', text: botReply, time: replyTime });
+        persistConversations();
+      } catch (err) {
+        console.error("FlyCoral Error:", err);
+        typingIndicator.classList.add('hidden');
+        const errReply = "Diego colgó los guantes y no me programó para esto. Si le hablás, capaz lo convencés de que vuelva a trabajar y me actualice.";
+        appendMessageUI('model', errReply, new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      }
+    }
+
+    async function callGeminiAPI(activeConversation, groundedFlightData = null, rawUserQuery = "", detectedDest = null, preferredCurr = "USD") {
+      const activeKey = apiKey || "";
+      const models = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+
+      if (!activeKey) {
+        return generateLocalCoralReply(detectedDest || 'bariloche', preferredCurr, groundedFlightData);
+      }
+
+      const systemPrompt = getCoralSystemPrompt(groundedFlightData);
+      const contents = activeConversation.messages.map(m => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{ text: m.text }]
+      }));
+
+      for (const model of models) {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeKey}`;
+
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const payload = {
+            contents: contents,
+            systemInstruction: { parts: [{ text: systemPrompt }] }
+          };
+
+          if (!groundedFlightData && attempt === 0) {
+            payload.tools = [{ google_search: {} }];
+          }
+
+          try {
+            const response = await fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+              if (response.status === 429) {
+                await new Promise(r => setTimeout(r, 1000));
+                continue;
+              }
+              throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const botText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (botText) return botText;
+          } catch (fetchErr) {
+            console.warn(`[FlyCoral] Error al consultar ${model}:`, fetchErr.message);
+          }
+        }
+      }
+
+      return generateLocalCoralReply(detectedDest || 'bariloche', preferredCurr, groundedFlightData);
+    }
+
+    function generateLocalCoralReply(destinationKey, preferredCurrency = 'USD', liveData = null) {
+      const data = liveData || getPresetFlightData(destinationKey, preferredCurrency);
+      const rows = data.flights.map((f, i) => {
+        const label = i === 0 ? "Recomendado" : "Alternativa";
+        const price = preferredCurrency === 'ARS' ? `ARS ${f.price_ars.toLocaleString('es-AR')}` : `USD ${f.price_usd}`;
+        return `| ${label} | ${f.date_display} | ${f.airline} (${f.type}) | ${f.departure_time} ➔ ${f.arrival_time} | ${price} | [👉 Ver y Reservar este Vuelo](${f.link}) |`;
+      }).join('\n');
+
+      return `Hola, ¿cómo estás? Acá estuve mirando las opciones disponibles para la ruta y seleccioné las alternativas más convenientes para cuidar tu presupuesto:
+
+| Opción | Fecha | Aerolínea & Escala | Horarios | Tarifa USD / ARS | Link Directo a Google Flights |
+|---|---|---|---|---|---|
+${rows}
+
+* Opciones de pago: emisión online directa con posibilidad de cuotas fijas en pesos según la tarjeta emisora.
+
+> ${data.flights[0].mother_verdict}`;
+    }
+
+    function setAlertModalType(type) {
+      currentAlertModalType = type;
+      if (type === 'simple') {
+        alertTypeSimpleBtn.className = "px-2 py-0.5 rounded-md font-semibold bg-white dark:bg-[#151b28] text-slate-900 dark:text-white shadow-xs transition";
+        alertTypeMultiBtn.className = "px-2 py-0.5 rounded-md font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition";
+        alertSimpleFields.classList.remove('hidden');
+        alertMultiFields.classList.add('hidden');
+      } else {
+        alertTypeMultiBtn.className = "px-2 py-0.5 rounded-md font-semibold bg-white dark:bg-[#151b28] text-slate-900 dark:text-white shadow-xs transition";
+        alertTypeSimpleBtn.className = "px-2 py-0.5 rounded-md font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition";
+        alertSimpleFields.classList.add('hidden');
+        alertMultiFields.classList.remove('hidden');
+        renderAlertMultiLegsUI();
+      }
+    }
+
+    alertTypeSimpleBtn.addEventListener('click', () => setAlertModalType('simple'));
+    alertTypeMultiBtn.addEventListener('click', () => setAlertModalType('multi'));
+
+    function renderAlertMultiLegsUI() {
+      alertMultiLegsList.innerHTML = '';
+      alertMultiLegs.forEach((leg, index) => {
+        const row = document.createElement('div');
+        row.className = 'grid grid-cols-12 gap-1.5 items-center bg-white dark:bg-slate-800 p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs';
+        row.innerHTML = `
+          <div class="col-span-2 text-[10px] font-bold text-pink-600 dark:text-[#ffbee9]">Tramo ${index + 1}</div>
+          <div class="col-span-5">
+            <input type="text" placeholder="Origen" value="${escapeHtml(leg.origin)}" class="alert-leg-orig w-full p-1 text-[11px] rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700" data-index="${index}" required>
+          </div>
+          <div class="col-span-4">
+            <input type="text" placeholder="Destino" value="${escapeHtml(leg.destination)}" class="alert-leg-dest w-full p-1 text-[11px] rounded bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700" data-index="${index}" required>
+          </div>
+          <div class="col-span-1 text-center">
+            ${alertMultiLegs.length > 2 ? `
+              <button type="button" class="remove-alert-leg text-slate-400 hover:text-red-500" data-index="${index}">
+                <i class="ph ph-trash text-xs"></i>
+              </button>
+            ` : '<span class="text-slate-300 dark:text-slate-600">—</span>'}
+          </div>
+        `;
+        alertMultiLegsList.appendChild(row);
+      });
+
+      alertMultiLegsList.querySelectorAll('.alert-leg-orig').forEach(i => i.addEventListener('input', e => alertMultiLegs[e.target.dataset.index].origin = e.target.value));
+      alertMultiLegsList.querySelectorAll('.alert-leg-dest').forEach(i => i.addEventListener('input', e => alertMultiLegs[e.target.dataset.index].destination = e.target.value));
+      alertMultiLegsList.querySelectorAll('.remove-alert-leg').forEach(btn => {
+        btn.addEventListener('click', e => {
+          alertMultiLegs.splice(parseInt(e.currentTarget.dataset.index, 10), 1);
+          renderAlertMultiLegsUI();
+        });
+      });
+    }
+
+    addAlertLegBtn.addEventListener('click', () => {
+      const last = alertMultiLegs[alertMultiLegs.length - 1];
+      alertMultiLegs.push({
+        origin: last?.destination || "Buenos Aires (EZE)",
+        destination: "Nuevo Destino"
+      });
+      renderAlertMultiLegsUI();
+    });
+
+    function renderAlertsUI() {
+      alertsListContainer.innerHTML = '';
+      if (flightAlerts.length === 0) {
+        alertsListContainer.innerHTML = `
+          <div class="text-center py-4 text-slate-400 text-xs">
+            No tenés alertas activas. Creá una para que Coral vigile tus rutas por correo.
+          </div>
+        `;
+        alertCountBadge.classList.add('hidden');
+        return;
+      }
+
+      alertCountBadge.textContent = flightAlerts.length;
+      alertCountBadge.classList.remove('hidden');
+
+      const freqLabels = { daily: 'Diaria', weekly: 'Semanal', monthly: 'Mensual' };
+
+      flightAlerts.forEach((alert, index) => {
+        const item = document.createElement('div');
+        item.className = 'p-2.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs';
+
+        let routeHeader = "";
+        if (alert.isMulti && Array.isArray(alert.legs)) {
+          const chain = alert.legs.map((l, i) => i === 0 ? `${escapeHtml(l.origin)} ➔ ${escapeHtml(l.destination)}` : escapeHtml(l.destination)).join(' ➔ ');
+          routeHeader = `<div class="font-bold text-slate-800 dark:text-white truncate">🔀 ${chain}</div>`;
+        } else {
+          routeHeader = `<div class="font-bold text-slate-800 dark:text-white">${escapeHtml(alert.origin)} ➔ ${escapeHtml(alert.destination)}</div>`;
+        }
+
+        const impossibleBadge = alert.impossiblePrice 
+          ? `<span class="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0.2 rounded-md bg-pink-100 dark:bg-pink-900/60 text-pink-700 dark:text-pink-300 font-bold border border-pink-300 dark:border-pink-800"><i class="ph-fill ph-fire text-pink-500"></i> Precio Imposible</span>`
+          : '';
+
+        const deliveryHour = alert.deliveryTime || "09:00";
+        const priceTargetText = alert.impossiblePrice 
+          ? 'Criterio Coral (Ganga extrema)' 
+          : (alert.targetPrice ? escapeHtml(alert.targetPrice) : 'Decide Coral');
+
+        item.innerHTML = `
+          <div class="flex-1 pr-2 truncate">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              ${routeHeader}
+              ${impossibleBadge}
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5">
+              ${escapeHtml(alert.email)} • ${freqLabels[alert.frequency] || 'Semanal'} a las ${escapeHtml(deliveryHour)} hs • Tope: ${priceTargetText}
+            </div>
+          </div>
+          <button class="remove-alert-btn p-1 text-slate-400 hover:text-red-500 rounded" data-index="${index}">
+            <i class="ph ph-trash text-sm"></i>
+          </button>
+        `;
+
+        item.querySelector('.remove-alert-btn').addEventListener('click', () => {
+          flightAlerts.splice(index, 1);
+          localStorage.setItem('flycoral_alerts', JSON.stringify(flightAlerts));
+          renderAlertsUI();
+          showToast("Alerta eliminada");
+        });
+
+        alertsListContainer.appendChild(item);
+      });
+    }
+
+    newAlertForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('alertEmail').value.trim();
+      const targetPrice = document.getElementById('alertTargetPrice').value.trim();
+      const frequency = document.getElementById('alertFrequency').value;
+      const deliveryTime = document.getElementById('alertDeliveryTime').value || "09:00";
+      const impossiblePrice = alertImpossiblePriceToggle.checked;
+
+      if (!email) return;
+
+      if (currentAlertModalType === 'multi') {
+        const validLegs = alertMultiLegs.filter(l => l.origin && l.destination);
+        if (validLegs.length < 2) {
+          showToast("Cargá al menos dos tramos válidos.", true);
+          return;
+        }
+        flightAlerts.push({ email, isMulti: true, legs: validLegs, targetPrice: targetPrice || null, frequency, deliveryTime, impossiblePrice });
+      } else {
+        const orig = document.getElementById('alertOrigin').value.trim() || 'Buenos Aires (AEP/EZE)';
+        const dest = document.getElementById('alertDestination').value.trim();
+        if (!dest) {
+          showToast("Ingresá el destino a monitorear.", true);
+          return;
+        }
+        flightAlerts.push({ email, isMulti: false, origin: orig, destination: dest, targetPrice: targetPrice || null, frequency, deliveryTime, impossiblePrice });
+      }
+
+      localStorage.setItem('flycoral_alerts', JSON.stringify(flightAlerts));
+      renderAlertsUI();
+      showToast(`Alerta guardada para avisar a ${email} (${deliveryTime} hs)`);
+    });
+
+    simulateNotificationBtn.addEventListener('click', () => {
+      alertsModal.classList.add('hidden');
+      const activeAlert = flightAlerts[0] || {
+        email: "diego.1202@yahoo.com",
+        isMulti: false,
+        origin: "Buenos Aires (AEP/EZE)",
+        destination: "Bariloche (BRC)",
+        frequency: "semanal",
+        deliveryTime: "09:00"
+      };
+
+      const prompt = `Simulá el reporte de alerta programada (${activeAlert.frequency} a las ${activeAlert.deliveryTime || '09:00'} hs) para ${activeAlert.origin} hacia ${activeAlert.destination}.
+Hablá con tu tono de madre canchera, práctica y formal (sin usar 'corazón', 'mi amor' ni ningún apelativo meloso). Saludo sobrio y con onda.
+Organizá las opciones en el cuadro/tabla con sus columnas prolijas: Opción, Fecha (día y mes de ida y vuelta), Aerolínea & Escala, Horarios, Tarifa USD/ARS y Link Directo a Google Flights con texto [👉 Ver y Reservar este Vuelo](URL). Cerrá con tu veredicto breve de 1 o 2 oraciones en bloque de cita.`;
+
+      handleSendMessage(prompt);
+    });
+
+    simulateImpossiblePriceBtn.addEventListener('click', () => {
+      alertsModal.classList.add('hidden');
+      const activeAlert = flightAlerts.find(a => a.impossiblePrice) || flightAlerts[0] || {
+        email: "diego.1202@yahoo.com",
+        isMulti: false,
+        origin: "Buenos Aires (AEP/EZE)",
+        destination: "Madrid (MAD)",
+        frequency: "diaria",
+        deliveryTime: "09:00"
+      };
+
+      const targetDest = activeAlert.isMulti ? "Europa Multidestino" : activeAlert.destination;
+      const targetOrig = activeAlert.isMulti ? "Buenos Aires" : activeAlert.origin;
+
+      const prompt = `🚨 ¡DISPARO DE ALERTA DE PRECIO IMPOSIBLE!
+Simulá el correo urgente que le llega al usuario porque detectaste un 'precio imposible' para ${targetOrig} hacia ${targetDest}.
+En tu rol de madre canchera, práctica y formal pero impactada:
+1. Abrí diciendo que estabas monitoreando la ruta y que saltó un precio que parece una equivocación de la aerolínea, que deje lo que está haciendo y mire esto. Sin apelativos melosos.
+2. Mostrá el cuadro/tabla comparativa con la tarifa insólita y el link directo [👉 Ver y Reservar este Vuelo](URL).
+3. Cerrá con tu veredicto urgente de madre en bloque de cita (1 o 2 oraciones directas explicando que emita antes de que corrijan el precio).`;
+
+      handleSendMessage(prompt);
+    });
+
+    function appendMessageUI(role, text, timeStr, animate = true) {
+      welcomeContainer.classList.add('hidden');
+      const isUser = role === 'user';
+      const wrapper = document.createElement('div');
+      wrapper.className = `flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''} ${animate ? 'animate-fadeIn' : ''}`;
+
+      const avatar = document.createElement('div');
+      avatar.className = `w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs shadow-xs mt-0.5 font-bold ${
+        isUser ? 'bg-slate-800 dark:bg-slate-700 text-white' : 'bg-[#ffbee9] text-slate-900 border border-pink-300'
+      }`;
+      avatar.innerHTML = isUser ? '<i class="ph-bold ph-user"></i>' : '<i class="ph-fill ph-airplane text-sm"></i>';
+
+      const bubbleContainer = document.createElement('div');
+      bubbleContainer.className = `flex flex-col max-w-[92%] sm:max-w-[85%] ${isUser ? 'items-end' : 'items-start'}`;
+
+      const bubble = document.createElement('div');
+      bubble.className = `rounded-2xl px-4 py-3 text-sm ${
+        isUser
+          ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-tr-none font-medium'
+          : 'bg-white dark:bg-[#151b28] text-slate-800 dark:text-slate-100 rounded-tl-none border border-pink-100 dark:border-slate-800 shadow-xs prose-content'
+      }`;
+
+      if (isUser) {
+        bubble.textContent = text;
+      } else {
+        if (typeof marked !== 'undefined' && marked.parse) {
+          bubble.innerHTML = marked.parse(text);
+        } else {
+          bubble.textContent = text;
+        }
+      }
+
+      const meta = document.createElement('div');
+      meta.className = 'flex items-center space-x-2 mt-1 px-1 text-[11px] text-slate-400';
+      meta.innerHTML = `<span>${timeStr || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>`;
+
+      if (!isUser) {
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'hover:text-pink-500 transition flex items-center space-x-1';
+        copyBtn.innerHTML = '<i class="ph ph-copy"></i><span>Copiar reporte</span>';
+        copyBtn.onclick = () => {
+          copyToClipboard(text);
+          showToast("Reporte copiado");
+        };
+        meta.appendChild(copyBtn);
+      }
+
+      bubbleContainer.appendChild(bubble);
+      bubbleContainer.appendChild(meta);
+      wrapper.appendChild(avatar);
+      wrapper.appendChild(bubbleContainer);
+
+      messagesContainer.appendChild(wrapper);
+      scrollToBottom();
+    }
+
+    function loadSavedConversations() {
+      try {
+        const data = localStorage.getItem('flycoral_conversations');
+        if (data) conversations = JSON.parse(data);
+      } catch (e) {
+        conversations = [];
+      }
+
+      if (conversations.length === 0) {
+        createNewChat();
+      } else {
+        activeChatId = conversations[0].id;
+        renderHistoryList();
+        renderActiveChat();
+      }
+      renderAlertsUI();
+    }
+
+    function persistConversations() {
+      try {
+        localStorage.setItem('flycoral_conversations', JSON.stringify(conversations));
+      } catch (e) {
+        console.warn("Storage:", e);
+      }
+    }
+
+    function createNewChat() {
+      const newChat = {
+        id: 'chat_' + Date.now(),
+        title: 'Consulta de Vuelo',
+        messages: [],
+        timestamp: Date.now()
+      };
+      conversations.unshift(newChat);
+      activeChatId = newChat.id;
+      persistConversations();
+      renderHistoryList();
+      renderActiveChat();
+      closeMobileSidebar();
+      messageInput.focus();
+    }
+
+    function getActiveConversation() {
+      return conversations.find(c => c.id === activeChatId) || conversations[0];
+    }
+
+    function renderHistoryList() {
+      historyList.innerHTML = '';
+      conversations.forEach(chat => {
+        const item = document.createElement('div');
+        const isActive = chat.id === activeChatId;
+        item.className = `group flex items-center justify-between p-2.5 rounded-xl cursor-pointer text-xs transition ${
+          isActive 
+            ? 'bg-[#ffbee9]/30 text-pink-900 dark:text-pink-100 font-semibold border border-[#ffbee9]/60' 
+            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+        }`;
+
+        item.innerHTML = `
+          <div class="flex items-center space-x-2 truncate flex-1 pr-1">
+            <i class="ph-fill ph-airplane-takeoff text-sm text-pink-500 shrink-0"></i>
+            <span class="truncate">${escapeHtml(chat.title || 'Consulta de Vuelo')}</span>
+          </div>
+          <button class="delete-chat-btn opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 rounded transition" title="Eliminar">
+            <i class="ph ph-trash text-sm"></i>
+          </button>
+        `;
+
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('.delete-chat-btn')) {
+            conversations = conversations.filter(c => c.id !== chat.id);
+            if (conversations.length === 0) createNewChat();
+            else {
+              if (activeChatId === chat.id) activeChatId = conversations[0].id;
+              persistConversations();
+              renderHistoryList();
+              renderActiveChat();
+            }
+          } else {
+            activeChatId = chat.id;
+            renderHistoryList();
+            renderActiveChat();
+            closeMobileSidebar();
+          }
+        });
+
+        historyList.appendChild(item);
+      });
+    }
+
+    function renderActiveChat() {
+      const active = getActiveConversation();
+      if (!active) return;
+      messagesContainer.innerHTML = '';
+
+      if (active.messages.length === 0) {
+        welcomeContainer.classList.remove('hidden');
+      } else {
+        welcomeContainer.classList.add('hidden');
+        active.messages.forEach(msg => appendMessageUI(msg.role, msg.text, msg.time, false));
+      }
+      scrollToBottom();
+    }
+
+    openKeyModalBtn.addEventListener('click', () => {
+      apiKeyInput.value = apiKey;
+      serpApiKeyInput.value = serpApiKey;
+      const testConsole = document.getElementById('testStatusConsole');
+      if (testConsole) testConsole.classList.add('hidden');
+      keyModal.classList.remove('hidden');
+    });
+    closeKeyModalBtn.addEventListener('click', () => keyModal.classList.add('hidden'));
+    cancelKeyModalBtn.addEventListener('click', () => keyModal.classList.add('hidden'));
+
+    const testApiKeysBtn = document.getElementById('testApiKeysBtn');
+    const testStatusConsole = document.getElementById('testStatusConsole');
+
+    if (testApiKeysBtn && testStatusConsole) {
+      testApiKeysBtn.addEventListener('click', async () => {
+        const testGeminiKey = apiKeyInput.value.trim();
+        const testSerpKey = serpApiKeyInput.value.trim();
+
+        testStatusConsole.classList.remove('hidden');
+        testStatusConsole.innerHTML = '<div class="text-pink-600 dark:text-pink-400 animate-pulse">⏳ Probando conexión...</div>';
+
+        let report = [];
+
+        if (!testGeminiKey) {
+          report.push('<div class="text-amber-500">⚪ Gemini API: No ingresada (se usarán datos de respaldo).</div>');
+        } else {
+          try {
+            const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${testGeminiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: [{ parts: [{ text: "ping" }] }] })
+            });
+            if (gRes.ok) {
+              report.push('<div class="text-emerald-500 font-bold">✅ Gemini API: ¡Conexión exitosa!</div>');
+            } else {
+              report.push(`<div class="text-rose-500 font-bold">❌ Gemini API: Error HTTP ${gRes.status}.</div>`);
+            }
+          } catch (e) {
+            report.push(`<div class="text-rose-500">❌ Gemini API: Error (${e.message}).</div>`);
+          }
+        }
+
+        if (!testSerpKey) {
+          report.push('<div class="text-amber-500">⚪ SerpApi: No ingresada (Modo Demo activo).</div>');
+        } else {
+          try {
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(`https://serpapi.com/account.json?api_key=${testSerpKey}`)}`;
+            const sRes = await fetch(proxyUrl);
+            if (sRes.ok) {
+              const accountData = await sRes.json();
+              const searchesLeft = accountData.total_searches_left ?? accountData.plan_searches_left ?? 'Disponible';
+              report.push(`<div class="text-emerald-500 font-bold">✅ SerpApi: ¡Conexión OK! Búsquedas disponibles: ${searchesLeft}</div>`);
+            } else {
+              report.push(`<div class="text-rose-500 font-bold">❌ SerpApi: Error HTTP ${sRes.status}.</div>`);
+            }
+          } catch (e) {
+            report.push(`<div class="text-rose-500">❌ SerpApi: Error de conexión (${e.message}).</div>`);
+          }
+        }
+
+        testStatusConsole.innerHTML = report.join('');
+      });
+    }
+
+    saveKeyModalBtn.addEventListener('click', () => {
+      apiKey = apiKeyInput.value.trim();
+      serpApiKey = serpApiKeyInput.value.trim();
+      localStorage.setItem('gemini_custom_api_key', apiKey);
+      localStorage.setItem('flycoral_serpapi_key', serpApiKey);
+      updateConnectionBadge();
+      keyModal.classList.add('hidden');
+      showToast("Claves guardadas correctamente");
+    });
+
+    toggleKeyVisibility.addEventListener('click', () => {
+      apiKeyInput.type = apiKeyInput.type === 'password' ? 'text' : 'password';
+      toggleKeyVisibility.innerHTML = apiKeyInput.type === 'password' ? '<i class="ph ph-eye"></i>' : '<i class="ph ph-eye-slash"></i>';
+    });
+    toggleSerpKeyVisibility.addEventListener('click', () => {
+      serpApiKeyInput.type = serpApiKeyInput.type === 'password' ? 'text' : 'password';
+      toggleSerpKeyVisibility.innerHTML = serpApiKeyInput.type === 'password' ? '<i class="ph ph-eye"></i>' : '<i class="ph ph-eye-slash"></i>';
+    });
+
+    openAlertsModalBtn.addEventListener('click', () => alertsModal.classList.remove('hidden'));
+    closeAlertsModalBtn.addEventListener('click', () => alertsModal.classList.add('hidden'));
+    doneAlertsModalBtn.addEventListener('click', () => alertsModal.classList.add('hidden'));
+
+    function adjustTextareaHeight() {
+      messageInput.style.height = 'auto';
+      messageInput.style.height = `${Math.min(messageInput.scrollHeight, 140)}px`;
+    }
+    function updateSendBtnState() {
+      sendBtn.disabled = !messageInput.value.trim();
+    }
+    function scrollToBottom() {
+      setTimeout(() => scrollAnchor.scrollIntoView({ behavior: 'smooth' }), 50);
+    }
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
+    }
+    function copyToClipboard(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    function showToast(msg, isErr = false) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = msg;
+      document.getElementById('toastIcon').className = isErr ? 'ph-bold ph-warning-circle text-rose-500 text-base' : 'ph-bold ph-check text-emerald-400 text-base';
+      toast.classList.remove('opacity-0', 'translate-y-12', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-12', 'pointer-events-none');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 2600);
+    }
+
+    function closeMobileSidebar() {
+      chatSidebar.classList.add('-translate-x-full');
+      sidebarBackdrop.classList.add('hidden');
+    }
+    function openMobileSidebar() {
+      chatSidebar.classList.remove('-translate-x-full');
+      sidebarBackdrop.classList.remove('hidden');
+    }
+
+    messageInput.addEventListener('input', () => { adjustTextareaHeight(); updateSendBtnState(); });
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!sendBtn.disabled) handleSendMessage();
+      }
+    });
+    chatForm.addEventListener('submit', (e) => { e.preventDefault(); handleSendMessage(); });
+
+    document.querySelectorAll('.starter-card').forEach(card => {
+      card.addEventListener('click', () => handleSendMessage(card.dataset.query));
+    });
+
+    toggleSidebarMobile.addEventListener('click', openMobileSidebar);
+    sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+    newChatBtn.addEventListener('click', createNewChat);
+    clearAllHistoryBtn.addEventListener('click', () => {
+      conversations = [];
+      createNewChat();
+      showToast("Historial reiniciado");
+    });
+
+    themeToggleBtn.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    });
+
+    window.addEventListener('load', () => {
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      initSearchBoxDates();
+      loadSavedConversations();
+      updateConnectionBadge();
+    });
+  </script>
+</body>
+</html>
