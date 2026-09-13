@@ -2,8 +2,9 @@ name: FlyCoral Automatic Alerts
 
 on:
   schedule:
-    - cron: '0 12 * * *'
-  workflow_dispatch:
+    # Se ejecuta todos los lunes a las 12:00 UTC (09:00 hs de Argentina)
+    - cron: '0 12 * * 1'
+  workflow_dispatch: # Permite disparar la prueba manual cuando quieras
 
 jobs:
   check-flights:
